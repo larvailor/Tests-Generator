@@ -4,18 +4,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OneClass_NS
+namespace TwoClassesOneNs_NS_A
 {
-    class OneClass
+    public class Class1
     {
         public void Method1()
         {
 
         }
+    }
+}
 
-
-
-        private void Method2(int x, int y)
+namespace TwoClassesOneNs_NS_B
+{
+    public class Class2
+    {
+        public void Method1()
         {
 
         }

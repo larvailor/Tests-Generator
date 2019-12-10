@@ -54,6 +54,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="TestClasses\OneClass.cs" />
+    <Compile Include="TestClasses\TwoClassesOneNs.cs" />
+    <Compile Include="TestClasses\TwoClassesTwoNs.cs" />
     <Compile Include="Tests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
