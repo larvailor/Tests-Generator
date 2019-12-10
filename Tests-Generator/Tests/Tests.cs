@@ -33,7 +33,7 @@ namespace Tests
 
             // generate classes
             NUnitTestsGenerator generator = new NUnitTestsGenerator(3, 3, 3);
-            await generator.GenerateAsync();
+            await generator.GenerateAsync(allTestClasses, generatedClassesFolder);
         }
 
 
