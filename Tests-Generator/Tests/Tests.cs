@@ -32,8 +32,8 @@ namespace Tests
             Directory.CreateDirectory(generatedClassesFolder);
 
             // generate classes
-            NUnitTestsGenerator generator = new NUnitTestsGenerator(3, 3, 3);
-            await generator.GenerateAsync(allTestClasses, generatedClassesFolder);
+            NUnitTestsGenerator generator = new NUnitTestsGenerator(allTestClasses, generatedClassesFolder, 3, 3, 3);
+            await generator.GenerateAsync();
         }
 
 

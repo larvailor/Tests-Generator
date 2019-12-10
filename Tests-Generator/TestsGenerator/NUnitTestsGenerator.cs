@@ -15,6 +15,8 @@ namespace TestsGenerator
     public class NUnitTestsGenerator
     {
         // variables
+        private List<string> SourceFiles;
+        private string DestFolder;
         private ExecutionDataflowBlockOptions boMaxFilesToLoadCount;
         private ExecutionDataflowBlockOptions boMaxExecuteTasksCount;
         private ExecutionDataflowBlockOptions boMaxFilesToWriteCount;
@@ -22,8 +24,10 @@ namespace TestsGenerator
 
 
         // methods
-        public NUnitTestsGenerator(int maxFilesToLoadCount, int maxExecuteTasksCount, int maxFilesToWriteCount)
+        public NUnitTestsGenerator(List<string> sourceFiles, string destFolder, int maxFilesToLoadCount, int maxExecuteTasksCount, int maxFilesToWriteCount)
         {
+            SourceFiles = sourceFiles;
+            DestFolder = destFolder;
             boMaxFilesToLoadCount = new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = maxFilesToLoadCount };
             boMaxExecuteTasksCount = new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = maxExecuteTasksCount };
             boMaxFilesToWriteCount = new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = maxFilesToWriteCount };
@@ -31,10 +35,35 @@ namespace TestsGenerator
 
 
 
-        public void Generate(List<string> sourceFiles, string destFolder)
+        public async Task GenerateAsync()
+        {
+            await Task.Run((Action)Generate);
+        }
+
+
+
+        public void Generate()
         {
             var loadFiles = new TransformBlock<string, FileInfo>(new Func<string, Task<FileInfo>>(LoadContent), boMaxFilesToLoadCount);
             var getTestClasses = new TransformBlock<FileInfo, FileInfo>(new Func<FileInfo, Task<FileInfo>>(GenerateNUnitTests), boMaxExecuteTasksCount);
+            var writeResult = new ActionBlock<FileInfo>(async input => { await FillTests(input); }, boMaxFilesToWriteCount);
+
+            loadFiles.LinkTo(getTestClasses, new DataflowLinkOptions() { PropagateCompletion = true });
+            getTestClasses.LinkTo(writeResult, new DataflowLinkOptions() { PropagateCompletion = true });
+
+            foreach (var sourceFile in SourceFiles)
+            {
+                loadFiles.Post(sourceFile);
+            }
+
+            loadFiles.Complete();
+            loadFiles.Completion.Wait();
+
+            getTestClasses.Complete();
+            getTestClasses.Completion.Wait();
+
+            writeResult.Complete();
+            writeResult.Completion.Wait();
         }
 
 
@@ -108,6 +137,26 @@ namespace TestsGenerator
         private List<ParameterInfo> GetParameters(MethodDeclarationSyntax method)
         {
             return method.ParameterList.Parameters.Select(param => new ParameterInfo(param.Identifier.Value.ToString(), param.Type)).ToList();
+        }
+
+
+
+        private async Task FillTests(FileInfo fi)
+        {
+            using (
+                var writer = new StreamWriter(
+                    new FileStream(
+                        System.IO.Path.Combine(
+                            Directory.GetCurrentDirectory(),
+                            fi.Name
+                            ),
+                        FileMode.Create
+                        )
+                    )
+                )
+            {
+                await writer.WriteAsync(fi.Content);
+            }
         }
     }
 }
