@@ -45,8 +45,8 @@ namespace TestsGenerator
         public void Generate()
         {
             var loadFiles = new TransformBlock<string, FileInfo>(new Func<string, Task<FileInfo>>(LoadContent), boMaxFilesToLoadCount);
-            var getTestClasses = new TransformBlock<FileInfo, FileInfo>(new Func<FileInfo, Task<FileInfo>>(GenerateNUnitTests), boMaxExecuteTasksCount);
-            var writeResult = new ActionBlock<FileInfo>(async input => { await FillTests(input); }, boMaxFilesToWriteCount);
+            var getTestClasses = new TransformBlock<FileInfo, List<FileInfo>>(new Func<FileInfo, Task<List<FileInfo>>>(GenerateNUnitTests), boMaxExecuteTasksCount);
+            var writeResult = new ActionBlock<List<FileInfo>>(async input => { await FillTests(input); }, boMaxFilesToWriteCount);
 
             loadFiles.LinkTo(getTestClasses, new DataflowLinkOptions() { PropagateCompletion = true });
             getTestClasses.LinkTo(writeResult, new DataflowLinkOptions() { PropagateCompletion = true });
@@ -80,22 +80,23 @@ namespace TestsGenerator
 
 
 
-        private async Task<FileInfo> GenerateNUnitTests(FileInfo fi)
+        private async Task<List<FileInfo>> GenerateNUnitTests(FileInfo fi)
         {
             return await GenerateCode(fi);
         }
 
 
 
-        private async Task<FileInfo> GenerateCode(FileInfo fi)
+        private async Task<List<FileInfo>> GenerateCode(FileInfo fi)
         {
             var root = await CSharpSyntaxTree.ParseText(fi.Content).GetRootAsync();
-            return new FileInfo(Path.GetFileNameWithoutExtension(fi.Name) + "Test.cs", GenerateCodeFromTree(root));
+            //return new FileInfo(Path.GetFileNameWithoutExtension(fi.Name) + "Test.cs", GenerateCodeFromTree(root));
+            return GenerateCodeFromTree(root);
         }
 
 
 
-        private string GenerateCodeFromTree(SyntaxNode root)
+        private List<FileInfo> GenerateCodeFromTree(SyntaxNode root)
         {
             var classes = new List<ClassDeclarationSyntax>(root.DescendantNodes().OfType<ClassDeclarationSyntax>());
             var usings = new List<UsingDirectiveSyntax>(root.DescendantNodes().OfType<UsingDirectiveSyntax>());
@@ -141,22 +142,26 @@ namespace TestsGenerator
 
 
 
-        private async Task FillTests(FileInfo fi)
+        private async Task FillTests(List<FileInfo> fileInfo)
         {
-            using (
-                var writer = new StreamWriter(
-                    new FileStream(
-                        System.IO.Path.Combine(
-                            Directory.GetCurrentDirectory(),
-                            fi.Name
-                            ),
-                        FileMode.Create
+            foreach (var fi in fileInfo)
+            {
+                using (
+                    var writer = new StreamWriter(
+                        new FileStream(
+                            System.IO.Path.Combine(
+                                DestFolder,
+                                fi.Name
+                                ),
+                            FileMode.Create
+                            )
                         )
                     )
-                )
-            {
-                await writer.WriteAsync(fi.Content);
+                {
+                    await writer.WriteAsync(fi.Content);
+                }
             }
+
         }
     }
 }

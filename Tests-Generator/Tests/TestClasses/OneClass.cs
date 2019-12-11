@@ -15,7 +15,7 @@ namespace OneClass_NS
 
 
 
-        private void Method2(int x, int y)
+        public void Method2()
         {
 
         }
