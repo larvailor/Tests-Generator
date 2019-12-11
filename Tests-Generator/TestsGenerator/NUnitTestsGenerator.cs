@@ -90,7 +90,6 @@ namespace TestsGenerator
         private async Task<List<FileInfo>> GenerateCode(FileInfo fi)
         {
             var root = await CSharpSyntaxTree.ParseText(fi.Content).GetRootAsync();
-            //return new FileInfo(Path.GetFileNameWithoutExtension(fi.Name) + "Test.cs", GenerateCodeFromTree(root));
             return GenerateCodeFromTree(root);
         }
 
@@ -120,8 +119,7 @@ namespace TestsGenerator
 
         private List<MethodInfo> GetMethods(ClassDeclarationSyntax innerNsClass)
         {
-            var methods = innerNsClass.DescendantNodes().OfType<MethodDeclarationSyntax>().Where(method => method.Modifiers
-                .Any(modifier => modifier.ToString() == "public"));
+            var methods = innerNsClass.DescendantNodes().OfType<MethodDeclarationSyntax>();
 
             var result = new List<MethodInfo>();
 
