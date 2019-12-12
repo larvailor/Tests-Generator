@@ -33,16 +33,7 @@ namespace TestsGenerator
             boMaxFilesToWriteCount = new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = maxFilesToWriteCount };
         }
 
-
-
-        public async Task GenerateAsync()
-        {
-            await Task.Run((Action)Generate);
-        }
-
-
-
-        public void Generate()
+        public Task Generate()
         {
             var loadFiles = new TransformBlock<string, FileInfo>(new Func<string, Task<FileInfo>>(LoadContent), boMaxFilesToLoadCount);
             var getTestClasses = new TransformBlock<FileInfo, List<FileInfo>>(new Func<FileInfo, Task<List<FileInfo>>>(GenerateNUnitTests), boMaxExecuteTasksCount);
@@ -55,15 +46,9 @@ namespace TestsGenerator
             {
                 loadFiles.Post(sourceFile);
             }
-
             loadFiles.Complete();
-            loadFiles.Completion.Wait();
 
-            getTestClasses.Complete();
-            getTestClasses.Completion.Wait();
-
-            writeResult.Complete();
-            writeResult.Completion.Wait();
+            return writeResult.Completion;
         }
 
 
