@@ -10,13 +10,13 @@ namespace UseExample
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            new Program().Perform();
+            await new Program().PerformAsync();
         }
 
 
-        public void Perform()
+        public async Task PerformAsync()
         {
             Console.WriteLine("Enter maxFilesToLoadCount: ");
             var maxFilesToLoadCount = int.Parse(Console.ReadLine());
@@ -31,7 +31,7 @@ namespace UseExample
             string destFolder = System.IO.Path.Combine(Directory.GetCurrentDirectory(), "..\\..\\..\\Tests\\TestClasses\\GeneratedInRuntime");
             Directory.CreateDirectory(destFolder);
 
-            new NUnitTestsGenerator(GetSourceFiles(sourceFolder), destFolder, maxFilesToLoadCount, maxExecuteTasksCount, maxFilesToWriteCount).Generate();
+            await new NUnitTestsGenerator(GetSourceFiles(sourceFolder), destFolder, maxFilesToLoadCount, maxExecuteTasksCount, maxFilesToWriteCount).Generate();
 
             Console.WriteLine("Success");
             Console.ReadLine();
